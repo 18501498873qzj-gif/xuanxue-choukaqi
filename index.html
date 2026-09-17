@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄学抽卡器 · 周易八卦幸运时辰推算</title>
+<style>
+  :root {
+    --bg-deep: #1a0d0a;
+    --bg-mid: #2d1810;
+    --gold: #d4af37;
+    --gold-bright: #f4d160;
+    --red: #8b0000;
+    --red-bright: #c41e3a;
+    --text: #f4e4bc;
+    --text-dim: #b89968;
+    --border: rgba(212, 175, 55, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "STKaiti", "KaiTi", "楷体", "Microsoft YaHei", serif;
+    background:
+      radial-gradient(ellipse at top, #3d1f0f 0%, transparent 60%),
+      radial-gradient(ellipse at bottom, #1a0d0a 0%, #0a0504 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* 背景八卦图 */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 800px;
+    height: 800px;
+    transform: translate(-50%, -50%);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='95' fill='none' stroke='%23d4af37' stroke-width='0.5' opacity='0.15'/><circle cx='100' cy='100' r='80' fill='none' stroke='%23d4af37' stroke-width='0.3' opacity='0.1'/><path d='M100 5 A95 95 0 0 1 100 195 A47 47 0 0 0 100 105 A47 47 0 0 1 100 5 Z' fill='%23d4af37' opacity='0.08'/><circle cx='100' cy='53' r='8' fill='%231a0d0a' opacity='0.6'/><circle cx='100' cy='147' r='8' fill='%23d4af37' opacity='0.6'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+    animation: rotateBagua 120s linear infinite;
+  }
+
+  @keyframes rotateBagua {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 120px;
+  }
+
+  /* 顶部标题 */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .header .title-mark {
+    display: inline-block;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 12px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+  }
+
+  .header h1 {
+    font-size: 42px;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold), var(--red-bright));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+  }
+
+  .header .subtitle {
+    font-size: 15px;
+    color: var(--text-dim);
+    letter-spacing: 4px;
+  }
+
+  /* 卡片通用样式 */
+  .card {
+    background: linear-gradient(160deg, rgba(45, 24, 16, 0.85), rgba(26, 13, 10, 0.9));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(212, 175, 55, 0.15);
+    position: relative;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--gold), transparent 40%, transparent 60%, var(--gold));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .section-title {
+    font-size: 20px;
+    color: var(--gold-bright);
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::before, .section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  /* 表单 */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .form-group label .required {
+    color: var(--red-bright);
+    margin-left: 4px;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(10, 5, 4, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2), inset 0 0 12px rgba(212, 175, 55, 0.1);
+  }
+
+  .form-group input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  /* 自定义日期时间选择器 */
+  .datetime-picker {
+    position: relative;
+  }
+
+  .datetime-picker input {
+    cursor: pointer;
+    caret-color: transparent;
+  }
+
+  .datetime-picker input::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
+  .datetime-picker .picker-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    pointer-events: none;
+    font-size: 18px;
+  }
+
+  .datetime-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 280px;
+    max-width: calc(100vw - 48px);
+    background: linear-gradient(160deg, rgba(45, 24, 16, 0.98), rgba(26, 13, 10, 0.98));
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 50;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(212, 175, 55, 0.2);
+    backdrop-filter: blur(12px);
+  }
+
+  .picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .picker-nav-btn {
+    background: rgba(139, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    color: var(--gold-bright);
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .picker-nav-btn:hover {
+    background: var(--red);
+    border-color: var(--gold);
+  }
+
+  .picker-title {
+    color: var(--gold-bright);
+    font-size: 12px;
+    letter-spacing: 1px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+
+  .picker-grid-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+
+  .picker-weekday {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 2px 0;
+  }
+
+  .picker-day {
+    aspect-ratio: 1;
+    border: 1px solid transparent;
+    background: rgba(10, 5, 4, 0.4);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .picker-day:hover:not(.disabled):not(.empty) {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--gold);
+  }
+
+  .picker-day.selected {
+    background: linear-gradient(135deg, var(--red), var(--red-bright));
+    border-color: var(--gold);
+    color: var(--gold-bright);
+    font-weight: bold;
+  }
+
+  .picker-day.today {
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
+  .picker-day.empty {
+    cursor: default;
+    background: transparent;
+  }
+
+  .picker-day.disabled {
+    color: var(--text-dim);
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .picker-hour-section {
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .picker-hour-title {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-bottom: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .picker-hour-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+  }
+
+  .picker-hour-cell {
+    padding: 6px 0;
+    background: rgba(10, 5, 4, 0.4);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text);
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .picker-hour-cell:hover {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--gold);
+  }
+
+  .picker-hour-cell.selected {
+    background: linear-gradient(135deg, var(--red), var(--red-bright));
+    border-color: var(--gold);
+    color: var(--gold-bright);
+    font-weight: bold;
+  }
+
+  .picker-today-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(10, 5, 4, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+  }
+
+  .picker-today-btn:hover {
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
+  /* 按钮 */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, var(--red), var(--red-bright));
+    color: var(--text);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    font-size: 17px;
+    font-family: inherit;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(196, 30, 58, 0.4), 0 0 24px rgba(212, 175, 55, 0.3);
+    background: linear-gradient(135deg, var(--red-bright), #e74c3c);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, #4a3018, #6b4528);
+    color: var(--gold-bright);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #6b4528, #8b5d3a);
+    box-shadow: 0 8px 24px rgba(107, 69, 40, 0.4);
+  }
+
+  /* 加载动画 */
+  .loader {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(244, 228, 188, 0.3);
+    border-top-color: var(--gold-bright);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* 结果卡片 */
+  .result-card {
+    text-align: center;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-label {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+
+  .result-time {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--gold-bright);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(244, 209, 96, 0.5);
+    padding: 16px;
+    background: rgba(212, 175, 55, 0.05);
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+  }
+
+  .result-bagua {
+    font-size: 18px;
+    color: var(--red-bright);
+    margin: 16px 0;
+    letter-spacing: 6px;
+    font-weight: bold;
+  }
+
+  .result-explain {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.9;
+    text-align: left;
+    background: rgba(10, 5, 4, 0.4);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--gold);
+    margin: 16px 0;
+    white-space: pre-wrap;
+  }
+
+  .result-explain-title {
+    color: var(--gold-bright);
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .result-actions .btn {
+    width: auto;
+    flex: 1;
+  }
+
+  /* 隐藏类 */
+  .hidden { display: none !important; }
+
+  /* 错误提示 */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(139, 0, 0, 0.95);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 1px solid var(--gold);
+    font-size: 14px;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    animation: slideDown 0.3s ease;
+    max-width: calc(100vw - 48px);
+  }
+
+  @keyframes slideDown {
+    from { transform: translate(-50%, -100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  /* 音乐播放器 - 浮动 */
+  .music-player {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: linear-gradient(135deg, rgba(45, 24, 16, 0.95), rgba(26, 13, 10, 0.95));
+    border: 1px solid var(--gold);
+    border-radius: 50px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(212, 175, 55, 0.2);
+    transition: all 0.3s ease;
+    max-width: calc(100vw - 48px);
+  }
+
+  .music-player:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 32px rgba(212, 175, 55, 0.3);
+  }
+
+  .music-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--red-bright));
+    border: 1px solid var(--gold);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .music-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(212, 175, 55, 0.6);
+  }
+
+  .music-btn.playing {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.4); }
+    50% { box-shadow: 0 0 24px rgba(212, 175, 55, 0.8); }
+  }
+
+  .music-info {
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: 1px;
+    line-height: 1.4;
+  }
+
+  .music-info .music-title {
+    color: var(--gold-bright);
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .music-info .music-status {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* 首次播放引导提示 */
+  .play-hint {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    background: rgba(212, 175, 55, 0.95);
+    color: #1a0d0a;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 99;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    animation: bounce 2s ease-in-out infinite;
+    max-width: 200px;
+  }
+
+  .play-hint::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    right: 24px;
+    border: 6px solid transparent;
+    border-top-color: rgba(212, 175, 55, 0.95);
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* 响应式 */
+  @media (max-width: 640px) {
+    .container { padding: 20px 14px 130px; }
+    .header { margin-bottom: 24px; }
+    .header h1 { font-size: 28px; letter-spacing: 4px; }
+    .header .title-mark { font-size: 20px; letter-spacing: 8px; }
+    .header .subtitle { font-size: 13px; letter-spacing: 3px; }
+    .card { padding: 18px 16px; margin-bottom: 18px; border-radius: 12px; }
+    .section-title { font-size: 17px; margin-bottom: 16px; letter-spacing: 2px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { font-size: 14px; margin-bottom: 6px; }
+    .form-group input { padding: 12px 14px; font-size: 15px; }
+    .btn { padding: 12px 24px; font-size: 15px; letter-spacing: 3px; }
+    .result-label { font-size: 13px; letter-spacing: 3px; }
+    .result-time { font-size: 22px; padding: 14px; letter-spacing: 1px; }
+    .result-actions { flex-direction: column; gap: 10px; }
+    .music-player { bottom: 14px; right: 14px; padding: 7px 12px; gap: 10px; max-width: calc(100vw - 28px); }
+    .music-btn { width: 36px; height: 36px; font-size: 14px; }
+    .music-info .music-title { font-size: 13px; }
+    .music-info .music-status { font-size: 11px; }
+    .play-hint { bottom: 66px; right: 14px; font-size: 12px; padding: 7px 12px; max-width: 180px; }
+    .datetime-popup {
+      width: calc(100vw - 28px);
+      padding: 10px;
+      left: -2px;
+    }
+    .picker-day { font-size: 11px; }
+    .picker-weekday { font-size: 10px; padding: 2px 0; }
+    .picker-hour-cell { font-size: 11px; padding: 5px 0; }
+    .picker-title { font-size: 11px; letter-spacing: 0; }
+    .picker-nav-btn { width: 20px; height: 20px; font-size: 11px; }
+    .picker-hour-title { font-size: 11px; margin-bottom: 4px; }
+    .picker-today-btn { font-size: 11px; padding: 5px; }
+    .footer-tip { font-size: 11px; margin-top: 24px; }
+    .toast { font-size: 13px; padding: 10px 18px; top: 16px; }
+  }
+
+  /* 超小屏（如 iPhone SE）适配 */
+  @media (max-width: 360px) {
+    .container { padding: 16px 10px 120px; }
+    .header h1 { font-size: 24px; letter-spacing: 3px; }
+    .header .title-mark { font-size: 16px; letter-spacing: 6px; }
+    .card { padding: 14px 12px; }
+    .result-time { font-size: 18px; padding: 12px; }
+    .picker-hour-grid { grid-template-columns: repeat(4, 1fr); }
+    .picker-hour-cell { font-size: 10px; padding: 4px 0; }
+    .music-player { padding: 6px 10px; }
+  }
+
+  /* 装饰元素 */
+  .decoration {
+    text-align: center;
+    color: var(--gold);
+    font-size: 14px;
+    letter-spacing: 8px;
+    margin: 20px 0;
+    opacity: 0.6;
+  }
+
+  .footer-tip {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 32px;
+    line-height: 1.8;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部标题 -->
+    <header class="header">
+      <div class="title-mark">☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷</div>
+      <h1>玄学抽卡器</h1>
+      <div class="subtitle">周易八卦 · 幸运时辰推算</div>
+    </header>
+
+    <!-- 输入表单 -->
+    <section class="card" id="inputCard">
+      <div class="section-title">填写生辰</div>
+      <div class="form-group">
+        <label>姓名 <span class="required">*</span></label>
+        <input type="text" id="nameInput" placeholder="请输入您的姓名（用于推算笔画数理）" maxlength="20" />
+      </div>
+      <div class="form-group">
+        <label>出生时间 <span class="required">*</span></label>
+        <div class="datetime-picker">
+          <input type="text" id="birthInput" placeholder="点击选择出生日期与时间" readonly />
+          <span class="picker-icon">📅</span>
+          <!-- 自定义日历弹窗 -->
+          <div class="datetime-popup hidden" id="datetimePopup" onclick="event.stopPropagation()">
+            <div class="picker-header">
+              <button class="picker-nav-btn" onclick="changePickerYear(-1)" title="上一年">«</button>
+              <button class="picker-nav-btn" onclick="changePickerMonth(-1)" title="上一月">‹</button>
+              <span class="picker-title" id="pickerTitle">—</span>
+              <button class="picker-nav-btn" onclick="changePickerMonth(1)" title="下一月">›</button>
+              <button class="picker-nav-btn" onclick="changePickerYear(1)" title="下一年">»</button>
+            </div>
+            <div class="picker-grid-header" id="weekdayHeader"></div>
+            <div class="picker-grid" id="pickerGrid"></div>
+            <div class="picker-hour-section">
+              <div class="picker-hour-title" id="hourTitle">请先选日期，再选时辰</div>
+              <div class="picker-hour-grid" id="hourGrid"></div>
+            </div>
+            <button class="picker-today-btn" onclick="jumpToToday()">回到今日</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="drawBtn" onclick="drawLuck()">
+        <span>开始推算</span>
+      </button>
+    </section>
+
+    <!-- 结果展示 -->
+    <section class="card hidden" id="resultCard">
+      <div class="section-title">卦象已现</div>
+      <div class="result-card">
+        <div class="result-label">您的幸运时辰</div>
+        <div class="result-time" id="luckyTime">—</div>
+        <div class="result-actions">
+          <button class="btn btn-secondary" onclick="redrawLuck()">
+            <span>再抽一次</span>
+          </button>
+          <button class="btn" onclick="resetForm()">
+            <span>重新填写</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="decoration">✦ ✦ ✦</div>
+
+    <div class="footer-tip">
+      本推算基于传统周易八卦与八字命理，仅供娱乐参考<br/>
+      实际吉凶还需结合个人修行与当下心境
+    </div>
+  </div>
+
+  <!-- 音乐播放器 -->
+  <div class="music-player">
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="播放/暂停 好运来">▶</button>
+    <div class="music-info">
+      <div class="music-title">好运来 · 祖海</div>
+      <div class="music-status" id="musicStatus">点击播放 · 接好运</div>
+    </div>
+  </div>
+  <div class="play-hint" id="playHint">点这里播放《好运来》接好运~</div>
+
+  <!-- 本地原版音频（祖海《好运来》），通过 PowerShell 从网易外链下载 -->
+  <audio id="bgAudio" loop preload="auto">
+    <source src="haoyunlai.mp3" type="audio/mpeg">
+  </audio>
+
+<script>
+  // ============== 全局配置 ==============
+  const DEEPSEEK_API_KEY = "sk-746dea1b02dc425db8b5eadaf8dc00f7";
+  const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
+  const MODEL_NAME = "deepseek-chat";
+
+  // 八卦符号映射
+  const BAGUA_SYMBOLS = ["☰ 乾", "☱ 兑", "☲ 离", "☳ 震", "☴ 巽", "☵ 坎", "☶ 艮", "☷ 坤"];
+  const BAGUA_NAMES = ["乾为天", "兑为泽", "离为火", "震为雷", "巽为风", "坎为水", "艮为山", "坤为地"];
+
+  // ============== 工具函数 ==============
+  function showToast(message, duration = 3000) {
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+
+  function isValidDate(str) {
+    if (!str) return false;
+    const d = new Date(str);
+    return !isNaN(d.getTime());
+  }
+
+  function randomBagua() {
+    const idx = Math.floor(Math.random() * 8);
+    return { symbol: BAGUA_SYMBOLS[idx], name: BAGUA_NAMES[idx], index: idx };
+  }
+
+  // 生成本地兜底的幸运时间（当日或明日）
+  function generateLocalLuckyTime() {
+    const now = new Date();
+    // 80% 概率取今日，20% 概率取明日
+    const useToday = Math.random() < 0.8;
+    const target = new Date(now);
+    if (!useToday) {
+      target.setDate(target.getDate() + 1);
+    }
+    // 取吉时：子(23-1) 丑(1-3) 寅(3-5) 卯(5-7) 辰(7-9) 巳(9-11) 午(11-13) 未(13-15) 申(15-17) 酉(17-19) 戌(19-21) 亥(21-23)
+    const luckyHours = [7, 9, 11, 13, 15, 17, 19, 21];
+    // 如果是今日，必须取当前时刻之后的小时
+    let availableHours = luckyHours;
+    if (useToday) {
+      availableHours = luckyHours.filter(h => h > now.getHours());
+      if (availableHours.length === 0) {
+        // 今日已无吉时，改取明日
+        target.setDate(target.getDate() + 1);
+        availableHours = luckyHours;
+      }
+    }
+    target.setHours(availableHours[Math.floor(Math.random() * availableHours.length)]);
+    target.setMinutes(Math.random() < 0.5 ? 0 : 30);
+    target.setSeconds(0);
+    return target;
+  }
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const h = String(date.getHours()).padStart(2, "0");
+    const min = String(date.getMinutes()).padStart(2, "0");
+    const hourZhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    let zhiIdx;
+    if (date.getHours() === 23 || date.getHours() < 1) zhiIdx = 0;
+    else zhiIdx = Math.floor((date.getHours() + 1) / 2);
+    return `${y}年${m}月${d}日 ${h}时${min}分（${hourZhi[zhiIdx]}时）`;
+  }
+
+  // ============== 自定义日期选择器 ==============
+  let pickerCurrentDate = new Date();  // 当前显示的月份
+  let pickerSelectedDate = null;        // 用户选中的日期（仅年月日）
+  let pickerHour = -1;                  // 用户选中的小时，-1 表示未选
+
+  function initPicker() {
+    // 周标题
+    const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+    const header = document.getElementById("weekdayHeader");
+    weekdays.forEach(w => {
+      const el = document.createElement("div");
+      el.className = "picker-weekday";
+      el.textContent = w;
+      header.appendChild(el);
+    });
+
+    // 渲染小时网格（24小时分布 4行x6列）
+    renderHourGrid();
+
+    // 默认显示当前月
+    pickerCurrentDate = new Date();
+    renderPicker();
+
+    // 点击外部关闭
+    document.addEventListener("click", (e) => {
+      const popup = document.getElementById("datetimePopup");
+      const picker = document.querySelector(".datetime-picker");
+      if (!popup.classList.contains("hidden") && !picker.contains(e.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  }
+
+  function renderHourGrid() {
+    const grid = document.getElementById("hourGrid");
+    grid.innerHTML = "";
+    const hourZhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    for (let i = 0; i < 24; i++) {
+      const cell = document.createElement("div");
+      cell.className = "picker-hour-cell";
+      // 显示小时和时辰，如 "07 辰"
+      const zhiIdx = (i === 23 || i < 1) ? 0 : Math.floor((i + 1) / 2);
+      cell.textContent = String(i).padStart(2, "0") + " " + hourZhi[zhiIdx];
+      cell.dataset.hour = i;
+      if (pickerHour === i) cell.classList.add("selected");
+      cell.addEventListener("click", () => {
+        if (!pickerSelectedDate) {
+          showToast("请先选择日期");
+          return;
+        }
+        pickerHour = i;
+        renderHourGrid();
+        // 选完小时立即确认并关闭弹窗
+        setTimeout(() => confirmPicker(), 150);
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  function openPicker() {
+    const popup = document.getElementById("datetimePopup");
+    popup.classList.remove("hidden");
+    // 如已有选中日期，跳转到该月份
+    if (pickerSelectedDate) {
+      pickerCurrentDate = new Date(pickerSelectedDate);
+    } else {
+      pickerCurrentDate = new Date();
+    }
+    renderPicker();
+    renderHourGrid();
+  }
+
+  function changePickerMonth(delta) {
+    pickerCurrentDate.setMonth(pickerCurrentDate.getMonth() + delta);
+    renderPicker();
+  }
+
+  function changePickerYear(delta) {
+    pickerCurrentDate.setFullYear(pickerCurrentDate.getFullYear() + delta);
+    renderPicker();
+  }
+
+  function jumpToToday() {
+    pickerCurrentDate = new Date();
+    renderPicker();
+  }
+
+  function renderPicker() {
+    const year = pickerCurrentDate.getFullYear();
+    const month = pickerCurrentDate.getMonth();
+    document.getElementById("pickerTitle").textContent = `${year}年${month + 1}月`;
+
+    const grid = document.getElementById("pickerGrid");
+    grid.innerHTML = "";
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 空白填充
+    for (let i = 0; i < startWeekday; i++) {
+      const empty = document.createElement("div");
+      empty.className = "picker-day empty";
+      grid.appendChild(empty);
+    }
+
+    // 日期填充
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayEl = document.createElement("div");
+      dayEl.className = "picker-day";
+      dayEl.textContent = d;
+      const dayDate = new Date(year, month, d);
+      dayDate.setHours(0, 0, 0, 0);
+
+      if (dayDate.getTime() === today.getTime()) {
+        dayEl.classList.add("today");
+      }
+      if (pickerSelectedDate &&
+          dayDate.getFullYear() === pickerSelectedDate.getFullYear() &&
+          dayDate.getMonth() === pickerSelectedDate.getMonth() &&
+          dayDate.getDate() === pickerSelectedDate.getDate()) {
+        dayEl.classList.add("selected");
+      }
+
+      dayEl.addEventListener("click", () => {
+        // 选中日期（不带时分），等用户选小时
+        pickerSelectedDate = new Date(year, month, d, 0, 0, 0, 0);
+        // 重置已选小时，因为日期变了
+        pickerHour = -1;
+        renderPicker();
+        renderHourGrid();
+        // 更新提示
+        const m = String(month + 1).padStart(2, "0");
+        const dd = String(d).padStart(2, "0");
+        document.getElementById("hourTitle").textContent = `已选 ${year}-${m}-${dd}，请选择时辰`;
+      });
+      grid.appendChild(dayEl);
+    }
+
+    // 更新小时提示
+    if (pickerSelectedDate) {
+      const m = String(pickerSelectedDate.getMonth() + 1).padStart(2, "0");
+      const dd = String(pickerSelectedDate.getDate()).padStart(2, "0");
+      if (pickerHour >= 0) {
+        document.getElementById("hourTitle").textContent = `已选 ${pickerSelectedDate.getFullYear()}-${m}-${dd} ${String(pickerHour).padStart(2, "0")}时`;
+      } else {
+        document.getElementById("hourTitle").textContent = `已选 ${pickerSelectedDate.getFullYear()}-${m}-${dd}，请选择时辰`;
+      }
+    } else {
+      document.getElementById("hourTitle").textContent = "请先选日期，再选时辰";
+    }
+  }
+
+  function confirmPicker() {
+    if (!pickerSelectedDate) {
+      showToast("请先选择日期");
+      return;
+    }
+    if (pickerHour < 0) {
+      showToast("请选择时辰");
+      return;
+    }
+    const y = pickerSelectedDate.getFullYear();
+    const m = String(pickerSelectedDate.getMonth() + 1).padStart(2, "0");
+    const d = String(pickerSelectedDate.getDate()).padStart(2, "0");
+    const h = String(pickerHour).padStart(2, "0");
+    document.getElementById("birthInput").value = `${y}-${m}-${d} ${h}时`;
+    document.getElementById("datetimePopup").classList.add("hidden");
+  }
+
+  function clearPicker() {
+    pickerSelectedDate = null;
+    pickerHour = -1;
+    document.getElementById("birthInput").value = "";
+    renderPicker();
+    renderHourGrid();
+  }
+
+  // ============== 核心推算逻辑 ==============
+  async function drawLuck() {
+    const name = document.getElementById("nameInput").value.trim();
+    const birth = document.getElementById("birthInput").value;
+
+    if (!name) {
+      showToast("请输入姓名");
+      return;
+    }
+    if (!birth) {
+      showToast("请选择出生时间");
+      return;
+    }
+    // 转换 "YYYY-MM-DD HH时" 或 "YYYY-MM-DD HH:MM" 为 Date
+    const normalized = birth.replace("时", ":00").replace(" ", "T");
+    const birthDate = new Date(normalized);
+    if (isNaN(birthDate.getTime())) {
+      showToast("出生时间格式无效");
+      return;
+    }
+
+    const btn = document.getElementById("drawBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span><span>卦象推演中...</span>';
+
+    try {
+      const result = await callDeepSeekForLuck(name, birthDate);
+      displayResult(result);
+    } catch (e) {
+      console.error("推算失败：", e);
+      showToast("网络推算失败，已使用本地卦象兜底");
+      const localResult = generateLocalResult(name, birthDate);
+      displayResult(localResult);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "<span>开始推算</span>";
+    }
+  }
+
+  async function redrawLuck() {
+    const btn = document.querySelector("#resultCard .btn-secondary");
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span><span>重新推演...</span>';
+    }
+    const name = document.getElementById("nameInput").value.trim();
+    const birth = document.getElementById("birthInput").value;
+    const birthDate = new Date(birth.replace("时", ":00").replace(" ", "T"));
+    try {
+      const result = await callDeepSeekForLuck(name, birthDate, true);
+      displayResult(result);
+    } catch (e) {
+      const localResult = generateLocalResult(name, birthDate);
+      displayResult(localResult);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "<span>再抽一次</span>";
+      }
+    }
+  }
+
+  function resetForm() {
+    document.getElementById("inputCard").classList.remove("hidden");
+    document.getElementById("resultCard").classList.add("hidden");
+    document.getElementById("nameInput").value = "";
+    document.getElementById("birthInput").value = "";
+    pickerSelectedDate = null;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // 调用 DeepSeek API
+  async function callDeepSeekForLuck(name, birthDate, isRedraw = false) {
+    const birthStr = `${birthDate.getFullYear()}年${birthDate.getMonth() + 1}月${birthDate.getDate()}日 ${birthDate.getHours()}时${String(birthDate.getMinutes()).padStart(2, "0")}分`;
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}年${tomorrow.getMonth() + 1}月${tomorrow.getDate()}日`;
+
+    const systemPrompt = `你是一位精通周易八卦、八字命理、五行生克的传统玄学大师。请根据用户提供的姓名与生辰八字，运用周易八卦原理为用户推算一个幸运时辰。
+
+【硬性要求】
+1. 幸运时辰必须落在"今日"或"明日"两个日期之一，具体到时、分（共 48 小时窗口内）。
+   - 今日 = ${todayStr}
+   - 明日 = ${tomorrowStr}
+2. 时辰必须是该日 06:00-22:00 之间的吉时，避开子时（23-1）等深夜时段。
+3. 推算要结合：姓名笔画数理、生辰八字（年月日时四柱）、五行强弱、当前流年流月、八卦方位等。
+4. 给出对应的八卦卦象（如"乾为天""离为火"等）。
+5. 给出该时辰的宜、忌事项。
+6. 用传统且雅致的语言风格，带一些文言色彩，但保持可读性。
+7. 每次推算结果应有差异（结合当前随机种子），即便同一人多次推算也应给出不同的吉时。
+
+请严格以下面JSON格式输出，不要任何额外文字、不要 markdown 代码块：
+{
+  "lucky_time": "YYYY年MM月DD日 HH时MM分（X时）",
+  "bagua": "☰ 乾为天",
+  "explanation": "卦象解读文本，50-150字，详细解释为何此吉时与用户八字契合",
+  "yi_ji": "宜：XXX、XXX、XXX\\n忌：XXX、XXX、XXX"
+}`;
+
+    const userPrompt = `姓名：${name}
+生辰：${birthStr}
+今日：${todayStr}
+明日：${tomorrowStr}
+${isRedraw ? "（用户对上次推算不满意，请重新推算一个不同的吉时，但必须仍在今日或明日内）" : ""}
+请为我推算一个幸运时辰。务必在今日或明日之内。`;
+
+    const response = await fetch(DEEPSEEK_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: MODEL_NAME,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.9,
+        max_tokens: 800
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+
+    // 提取 JSON（兼容 markdown 代码块包裹的情况）
+    let jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("无法解析模型输出：" + content);
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed;
+  }
+
+  // 本地兜底结果生成（限制为今日或明日）
+  function generateLocalResult(name, birthDate) {
+    const bagua = randomBagua();
+    const luckyDate = generateLocalLuckyTime();
+    const explanations = [
+      `${name}君之生辰八字与${bagua.name}卦象相合，五行流通，此时辰天时地利人和俱备，乃大吉之时。宜把握良机，可成大事。`,
+      `观君之命格，与${bagua.name}卦相应。此时辰紫微星动，太阴星君照临，阴阳调和，万事皆宜，尤其利于出行谋事。`,
+      `${bagua.name}卦现，君之八字喜用神得地。此吉时天德合、月德合俱临，福禄寿三星拱照，宜行诸善事。`,
+      `周易有云：${bagua.name}，元亨利贞。君之生辰遇此时辰，卦气相通，五行相生，乃天定之吉时，慎勿失之。`
+    ];
+    const yiJiList = [
+      "宜：出行、会友、签约、开市\n忌：动土、安葬、诉讼",
+      "宜：祈福、求嗣、订婚、迁居\n忌：远行、破土、开仓",
+      "宜：祭祀、立券、入学、求职\n忌：嫁娶、斋醮、伐木",
+      "宜：谈事、访客、置产、纳财\n忌：行船、畋猎、针灸"
+    ];
+    return {
+      lucky_time: formatDate(luckyDate),
+      bagua: bagua.symbol + " " + bagua.name,
+      explanation: explanations[Math.floor(Math.random() * explanations.length)],
+      yi_ji: yiJiList[Math.floor(Math.random() * yiJiList.length)]
+    };
+  }
+
+  // 显示结果
+  function displayResult(result) {
+    document.getElementById("inputCard").classList.add("hidden");
+    const resultCard = document.getElementById("resultCard");
+    resultCard.classList.remove("hidden");
+
+    document.getElementById("luckyTime").textContent = result.lucky_time || "—";
+
+    setTimeout(() => {
+      resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }
+
+  // ============== 音乐播放器（本地原版《好运来》· 祖海）==============
+  // 使用本地 haoyunlai.mp3 文件，通过 <audio> 元素播放
+  // 已通过 PowerShell 下载祖海原版《好运来》到本地，无网络/防盗链问题
+  let musicPlaying = false;
+  let bgAudio = null;
+
+  const musicBtn = document.getElementById("musicBtn");
+  const musicStatus = document.getElementById("musicStatus");
+  const playHint = document.getElementById("playHint");
+
+  function initBgAudio() {
+    if (!bgAudio) {
+      bgAudio = document.getElementById("bgAudio");
+      if (!bgAudio) {
+        // 动态创建 audio 元素（HTML 中已静态写入，兜底）
+        bgAudio = document.createElement("audio");
+        bgAudio.id = "bgAudio";
+        bgAudio.loop = true;
+        bgAudio.preload = "auto";
+        bgAudio.src = "haoyunlai.mp3";
+        document.body.appendChild(bgAudio);
+      }
+      // 监听播放结束（保险，loop=true 时不应触发）
+      bgAudio.addEventListener("ended", () => {
+        if (musicPlaying) {
+          bgAudio.currentTime = 0;
+          bgAudio.play().catch(() => {});
+        }
+      });
+      // 监听错误
+      bgAudio.addEventListener("error", (e) => {
+        console.error("音频加载失败:", e);
+        musicStatus.textContent = "音频加载失败";
+        musicBtn.innerHTML = "▶";
+        musicBtn.classList.remove("playing");
+        musicPlaying = false;
+      });
+      // 播放时更新状态
+      bgAudio.addEventListener("play", () => {
+        musicPlaying = true;
+        musicBtn.innerHTML = "❚❚";
+        musicBtn.classList.add("playing");
+        musicStatus.textContent = "正在播放 · 好运来";
+      });
+      bgAudio.addEventListener("pause", () => {
+        musicPlaying = false;
+        musicBtn.innerHTML = "▶";
+        musicBtn.classList.remove("playing");
+        musicStatus.textContent = "已暂停 · 接好运";
+      });
+    }
+    return bgAudio;
+  }
+
+  function toggleMusic() {
+    const audio = initBgAudio();
+    if (musicPlaying) {
+      audio.pause();
+    } else {
+      // 重置 currentTime（如已结束）
+      if (audio.ended || audio.currentTime >= audio.duration) {
+        audio.currentTime = 0;
+      }
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          if (playHint) playHint.style.display = "none";
+        }).catch(err => {
+          console.error("播放失败:", err);
+          musicStatus.textContent = "点击重试 · 接好运";
+          showToast("浏览器阻止了自动播放，请再次点击");
+        });
+      }
+    }
+  }
+
+  // ============== 初始化 ==============
+  // 初始化日期选择器
+  initPicker();
+
+  // 绑定日期输入框点击事件
+  document.getElementById("birthInput").addEventListener("click", openPicker);
+  document.getElementById("birthInput").addEventListener("focus", openPicker);
+
+  // 页面加载完成后显示提示
+  window.addEventListener("load", () => {
+    console.log("玄学抽卡器已加载");
+  });
+
+  // 回车提交
+  document.getElementById("nameInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") drawLuck();
+  });
+
+  // 首次用户交互后预加载音频（浏览器策略要求用户手势激活播放）
+  document.addEventListener("click", () => {
+    initBgAudio();
+  }, { once: true });
+</script>
+</body>
+</html>
